@@ -116,7 +116,6 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
                         min_idx = time_imu_sec
                     elif idx==len_imu-1:
                         max_idx = time_imu_sec
-                print(min_idx, max_idx, (max_idx-min_idx)/60, len_imu)
         # 4. rgb data 
         if args.rgb==True:
             print('read rgb data . ..')
@@ -158,7 +157,7 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
                     bag.write('/rgb_depth_topic', image_msg, t=rospy.Time(time_rgb_sec, time_rgb_nsec)) 
                 
         # 5. event data
-        print('reading event')
+        # print('reading event')
         # msg_Event = Event()
         # msg_Event.x = 1
         # msg_Event.y = 2
