@@ -23,3 +23,4 @@ E.g. If you want to get RGB and IMU data in the ROS bag:
 python ./main.py --input_dir ../data/mocap_env1_comb/ --imu --rgb
 
 ```
+Please refer to this [repository](https://gitlab.com/inivation/dv/dv-ros/-/tree/master/dv_ros_aedat4?ref_type=heads) for converting aedat4 event file to ROS bag format.
