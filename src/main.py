@@ -60,7 +60,7 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
                 len_joint = len(joint_sensor)
                  # joint
             for idx, line_joint in enumerate(joint_sensor):
-                record_joint = map(float, line_joint.split())
+                record_joint = list(map(float, line_joint.split()))
                 time_joint_sec = int(record_joint[0]//1e6)
                 time_joint_nsec = int(record_joint[0]%1e6*1000)
                 data_joint = record_joint[1:]
@@ -75,7 +75,6 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
                     min_idx = time_joint_sec
                 elif idx==len_joint-1:
                     max_idx = time_joint_sec
-            print(min_idx, max_idx, (max_idx-min_idx)/60, len_joint)
         # 3. imu (3 gyro+3 acc+4 oreintation+3*covariance)
         if args.imu==True:
             print('reading imu data...')
