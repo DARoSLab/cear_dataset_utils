@@ -84,7 +84,7 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
                 len_imu = len(imu_sensor)
                 # imu
                 for idx, line_imu in enumerate(imu_sensor):
-                    record_imu = map(float, line_imu.split())
+                    record_imu = list(map(float, line_imu.split()))
                     time_imu_sec = int(record_imu[0]//1e6)
                     time_imu_nsec = int(record_imu[0]%1e6*1000)
                     data_imu = record_imu[1:]
