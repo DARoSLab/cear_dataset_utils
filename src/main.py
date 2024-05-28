@@ -15,7 +15,31 @@ from my_utils import getargs
 from my_utils import get_png_files 
 from event_msgs.msg import Event
 
-def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_path, output_bag_filename, args):
+def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path, event_path, output_bag_filename, args):
+    
+    if args.rgb==True:
+        if output_bag_filename.endswith('.bag'):
+            output_bag_filename = output_bag_filename[:-4]
+        output_bag_filename += 'rgb.bag'
+    if args.depth==True:
+        if output_bag_filename.endswith('.bag'):
+            output_bag_filename = output_bag_filename[:-4]
+        output_bag_filename += 'depth.bag'
+    if args.joint==True:
+        if output_bag_filename.endswith('.bag'):
+            output_bag_filename = output_bag_filename[:-4]
+        output_bag_filename += 'joint.bag'
+    if args.imu==True:
+        if output_bag_filename.endswith('.bag'):
+            output_bag_filename = output_bag_filename[:-4]
+        output_bag_filename += 'imu.bag'
+    if args.gt_pose==True:
+        if output_bag_filename.endswith('.bag'):
+            output_bag_filename = output_bag_filename[:-4]
+        output_bag_filename += 'gt_pose.bag'
+    
+    print("output_bag_filename: ", output_bag_filename)
+    
     # Initialize a ROS bag file
     with rosbag.Bag(output_bag_filename, 'w') as bag:
         # Create a CvBridge to convert between OpenCV images and ROS images
@@ -54,6 +78,9 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
         # 2. joint angle (12*1)
         if args.joint==True:
             print('reading joint angle...')
+            if output_bag_filename.endswith('.bag'):
+                output_bag_filename = output_bag_filename[:-4]
+            output_bag_filename += 'joint.bag'
             with open(joint_path, 'r') as file2:
                 joint_sensor = file2.readlines()
                 file2.close()
@@ -78,6 +105,9 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
         # 3. imu (3 gyro+3 acc+4 oreintation+3*covariance)
         if args.imu==True:
             print('reading imu data...')
+            if output_bag_filename.endswith('.bag'):
+                output_bag_filename = output_bag_filename[:-4]
+            output_bag_filename += 'imu.bag'
             with open(imu_path, 'r') as file3:
                 # Read the lines from each file
                 imu_sensor = file3.readlines()
@@ -118,6 +148,9 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
         # 4. rgb data 
         if args.rgb==True:
             print('read rgb data . ..')
+            if output_bag_filename.endswith('.bag'):
+                output_bag_filename = output_bag_filename[:-4]
+            output_bag_filename += 'rgb.bag'
             png_files = get_png_files(rgb_path)
             for idx_png, png_path in enumerate(png_files):
                  # Read the image using OpenCV
@@ -135,6 +168,9 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path,evnet_p
         # 4. depth data 
         if args.depth==True:
             print('reading depth data ...')
+            if output_bag_filename.endswith('.bag'):
+                output_bag_filename = output_bag_filename[:-4]
+            output_bag_filename += 'depth.bag'
             png_files = get_png_files(depth_path) 
             for idx_png, png_path in enumerate(png_files):
                  # Read the image using OpenCV
@@ -181,9 +217,9 @@ if __name__ == "__main__":
     depth_path = root_folder+'depth/'
     aedat_file = root_folder+'event.aedat4'
 
-    output_bag_filename = root_folder+'output.bag'
+    output_bag_filename = root_folder  + '.bag'
 
     record_to_rosbag(gt_path=gt_path, joint_path=joint_path, imu_path=imu_path,
-                    rgb_path=rgb_path, depth_path=depth_path, evnet_path=aedat_file,
+                    rgb_path=rgb_path, depth_path=depth_path, event_path=aedat_file,
                     output_bag_filename=output_bag_filename, 
                     args=args)
