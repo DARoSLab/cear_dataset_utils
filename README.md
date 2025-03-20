@@ -8,7 +8,7 @@ ros-melodic
 # 0. Install
 ```
 git clone https://github.com/DARoSLab/cear_dataset_utils.git
-cd eagle_dataset_utils
+cd cear_dataset_utils
 catkin_make
 source ./devel/setup.bash
 ```
