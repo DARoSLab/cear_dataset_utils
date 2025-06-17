@@ -55,8 +55,8 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path, event_
                 # ground truth
                 for idx, line_gt in  enumerate(gt_sensor):
                     record_gt = map(float, line_gt.split())
-                    time_gt_sec = int(record_gt[0]//1e6)
-                    time_gt_nsec = int(record_gt[0]%1e6*1000)
+                    time_gt_sec = int(record_gt[0])
+                    time_gt_nsec = int(record_gt[0]%1*1e9)
                     data_gt = record_gt[1:]
                     msg_gt = PoseStamped()
                     msg_gt.pose.position.x = data_gt[0]
@@ -85,16 +85,53 @@ def record_to_rosbag(gt_path, joint_path, imu_path, rgb_path, depth_path, event_
                 joint_sensor = file2.readlines()
                 file2.close()
                 len_joint = len(joint_sensor)
-                 # joint
+            # joint
+            prev_time = None
+            prev_pos = None
             for idx, line_joint in enumerate(joint_sensor):
                 record_joint = list(map(float, line_joint.split()))
                 time_joint_sec = int(record_joint[0]//1e6)
                 time_joint_nsec = int(record_joint[0]%1e6*1000)
-                data_joint = record_joint[1:]
+                time_now = record_joint[0] / 1e6  # time in seconds
+
+                # ============================================
+                # Original order: FR, FL, HR, HL
+                # data_joint = record_joint[1:]
+
+                # ============================================
+                # Reordered to: FL, FR, HL, HR
+                original_joint_data = record_joint[1:]
+                data_joint = (
+                    original_joint_data[3:6] +   # FL
+                    original_joint_data[0:3] +   # FR
+                    original_joint_data[9:12] +  # HL
+                    original_joint_data[6:9]     # HR
+                )
+                # force data
+                data_contact = [0.0] * 12 + [v * 500 for v in original_joint_data[12:16]]
                 msg_joint = JointState() 
                 msg_joint.position = data_joint
-                msg_joint.name = ['FR_abduct', 'FR_thigh','FR_knee', 'FL_abduct', 'FL_thigh', 'FL_knee',
-                                  'HR_abduct', 'HR_thigh', 'HR_knee', 'HL_abduct', 'HL_thigh', 'HL_knee']
+                msg_joint.effort = data_contact
+                # msg_joint.name = ['FR_abduct', 'FR_thigh','FR_knee', 'FL_abduct', 'FL_thigh', 'FL_knee',
+                #                   'HR_abduct', 'HR_thigh', 'HR_knee', 'HL_abduct', 'HL_thigh', 'HL_knee']
+                msg_joint.name = ['FL_abduct', 'FL_thigh', 'FL_knee', 'FR_abduct', 'FR_thigh', 'FR_knee',
+                  'HL_abduct', 'HL_thigh', 'HL_knee', 'HR_abduct', 'HR_thigh', 'HR_knee']
+                
+                # Compute velocity if possible
+                if prev_time is not None and prev_pos is not None:
+                    dt = time_now - prev_time
+                    if dt > 0:
+                        velocity = [(curr - prev) / dt for curr, prev in zip(data_joint, prev_pos)]
+                        msg_joint.velocity = velocity
+                    else:
+                        msg_joint.velocity = [0.0] * len(data_joint)
+                else:
+                    msg_joint.velocity = [0.0] * len(data_joint)
+
+                # Update previous state
+                prev_time = time_now
+                prev_pos = data_joint
+
                 msg_joint.header = Header(seq=idx, stamp=rospy.Time(time_joint_sec, time_joint_nsec), 
                                           frame_id="joint")
                 bag.write('/joint_topic', msg_joint, t=rospy.Time(time_joint_sec, time_joint_nsec))
@@ -210,14 +247,16 @@ if __name__ == "__main__":
 
     # root_folder = './data/mocap_env1_comb/'
     root_folder = args.input_dir
-    gt_path = root_folder+'gt_pose.txt'
-    joint_path = root_folder+'mini_cheetah_joint.txt'
+    gt_path = root_folder+'MoCap.txt'
+    joint_path = root_folder+'mini_cheetah_joint_with_contact.txt'
     imu_path = root_folder+'vectornav.txt'
     rgb_path = root_folder+'rgb/'
     depth_path = root_folder+'depth/'
     aedat_file = root_folder+'event.aedat4'
+    
+    basename = os.path.basename(os.path.normpath(root_folder))  # mocap1_well-lit_trot
 
-    output_bag_filename = root_folder  + '.bag'
+    output_bag_filename = root_folder + basename + '_' + '.bag'
 
     record_to_rosbag(gt_path=gt_path, joint_path=joint_path, imu_path=imu_path,
                     rgb_path=rgb_path, depth_path=depth_path, event_path=aedat_file,
